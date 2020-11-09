@@ -1,0 +1,63 @@
+## a definition of how to apply metadata to a DataSource
+##
+kind: MetadataApplicator
+
+## the metadata of this resource
+##
+metadata:
+
+  ## the name of this metadata applicator
+  ##
+  name: ""
+
+## the spec of this resource
+##
+spec:
+
+  ## the behavior if metadata ALREADY EXISTS on a matched field
+  ##
+  ## FORMAT:
+  ##  - `Replace`: replace ALL existing metadata keys/values
+  ##  - `Merge`:   merge metadata keys/values (keeping the new values)
+  ##  - `Ignore`:  dont change existing metadata keys/values
+  ##
+  behaviour: ""
+
+  ## a list of field selectors
+  ##
+  ## NOTE:
+  ##  - we UNION together the list of fields matched by each selector
+  ##
+  selectors:
+
+    - ## a regex selector for fields to INCLUDE
+      ##
+      ## NOTE:
+      ##  - the regex finds matches of 'coordinates' over each field in the data schema
+      ##  - 'coordinates' are field references concatenated with `:`
+      ##     - ROOT:      `field_name`
+      ##     - STRUCT:    `struct_name:inner_field`
+      ##     - ARRAY:     `array_name:inner_field`
+      ##     - MAP-KEY:   `map_name:key:inner_field`
+      ##     - MAP-VALUE: `map_name:value:inner_field`
+      ##
+      ## EXAMPLE:
+      ##    coordinateInclude: ".*cust.*name.*"
+      ##
+      coordinateInclude: ""
+
+      ## a regex selector for fields to EXCLUDE
+      ##
+      ## NOTE:
+      ##  - `coordinateExclude` takes precedence over `coordinateInclude`
+      ##
+      coordinateExclude: ""
+
+  ## a metadata map to apply to the matched fields
+  ##
+  ## EXAMPLE:
+  ##    metadata:
+  ##      pii_class: "sensitive"
+  ##      other_key: "some_value"
+  ##
+  metadata: { }

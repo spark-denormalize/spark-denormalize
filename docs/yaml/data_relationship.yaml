@@ -1,0 +1,115 @@
+## a relationship based on equivalent/joinable field values
+##
+kind: DataRelationship
+
+## the metadata of this resource
+##
+metadata:
+
+  ## the name of this relationship
+  ##
+  name: ""
+
+## the spec of this resource
+##
+spec:
+
+  ## a list of definitions for equivalent/joinable fields
+  ##
+  ## WARNING:
+  ##  - each DataSource may only appear ONCE in this list, otherwise the job will fail
+  ##
+  ## EXAMPLE:
+  ##    equivalentFields:
+  ##      - dataSources:
+  ##          - kind: HDFSLikeDataSource
+  ##            name: customer
+  ##        fields:
+  ##          - name: custno
+  ##            type: string
+  ##      - dataSources:
+  ##          - kind: HDFSLikeDataSource
+  ##            name: customer_address
+  ##          - kind: HDFSLikeDataSource
+  ##            name: customer_contact
+  ##        fields:
+  ##          - name: customer_number
+  ##            type: integer
+  ##            castType: string
+  ##
+  equivalentFields:
+
+    - ## a list of data sources which contain the specified `fields[].name`
+      ##
+      dataSources:
+
+        - ## the kind of data source
+          ##
+          kind: ""
+
+          ## the name of the data source
+          ##
+          name: ""
+
+      ## a list of fields
+      ##
+      ## WARNING:
+      ##  - all `equivalentFields[].fields[]` must have the same number of elements,
+      ##    (specifying multiple elements defines a compound key)
+      ##
+      fields:
+
+        - ## the field name
+          ##
+          ## FORMAT:
+          ##  - a Spark field reference (for example: "struct_field.inner_field")
+          ##
+          name: ""
+
+          ## the field data type
+          ##
+          ## FORMAT:
+          ##  - `binary`
+          ##  - `boolean`
+          ##  - `decimal(<precision>,<scale>)`
+          ##  - `double`
+          ##  - `float`
+          ##  - `integer`
+          ##  - `long`
+          ##  - `short`
+          ##  - `string`
+          ##  - `struct`
+          ##
+          type: ""
+
+          ## a SparkSQL column statement to transform the field
+          ##
+          ## FORMAT:
+          ##  - {{ NAME }} will be templated with the name of the field
+          ##  - see SparkSQL docs: https://spark.apache.org/docs/3.0.1/api/sql/index.html
+          ##
+          ## EXAMPLE:
+          ##    query: "ROUND( {{ NAME }}, 0 )"
+          ##
+          query: "{{ NAME }}"
+
+          ## the data type we will cast the output of `query` as
+          ##
+          ## WARNING:
+          ##  - using anything other than "string" may result in NULL for cases where casting is not possible
+          ##    (for example, "a" cannot be cast to Integer, so becomes NULL)
+          ##  - all `castType` must be equal for `fields[]` at the same array index
+          ##    (that is, compound keys must have the same types at each index)
+          ##
+          ## NOTE:
+          ##  - this prevents spark unexpectedly casting a field using its magic
+          ##
+          ## FORMAT:
+          ##  - `double`
+          ##  - `float`
+          ##  - `integer`
+          ##  - `long`
+          ##  - `short`
+          ##  - `string`
+          ##
+          castType: "string"

@@ -1,0 +1,71 @@
+## a data source which is a 'view' of another data source
+##
+kind: VirtualDataSource
+
+## the metadata of this resource
+##
+metadata:
+
+  ## the name of this data source
+  ##
+  name: ""
+
+## the spec of this resource
+##
+spec:
+
+  ## the data source used in the view
+  ##
+  ## WARNING:
+  ##  - you can NOT specify a VirtualDataSource
+  ##
+  ## NOTE:
+  ##  - this VirtualDataSource will expose all the snapshots of the specified `dataSource`
+  ##
+  dataSource:
+
+    ## the kind of data source
+    ##
+    kind: ""
+
+    ## the name of the data source
+    ##
+    name: ""
+
+    ## the alias to give this data source in `dataView`
+    ##
+    alias: ""
+
+  ## an SQL query which returns the data
+  ##
+  ## WARNING:
+  ##  - using anything but SELECT/WHERE/GROUP-BY statements on the specified `dataSource`
+  ##    will result in unexpected behaviour relating to snapshots
+  ##
+  ## NOTE:
+  ##  - this is a SparkSQL query, see docs:
+  ##     - https://spark.apache.org/docs/3.0.1/sql-ref-syntax-qry-select.html
+  ##     - https://spark.apache.org/docs/3.0.1/api/sql/index.html
+  ##
+  ## EXAMPLE:
+  ##    sqlQuery: |
+  ##      SELECT
+  ##        col_1,
+  ##        col_2
+  ##      FROM
+  ##        xxxxx
+  ##      WHERE
+  ##        col_1 IS NOT NULL
+  ##
+  dataQuery: ""
+
+  ## a list of metadata applicators to apply
+  ##
+  ## NOTE:
+  ##  - metadata applicators are applied IN ORDER
+  ##
+  metadataApplicators:
+
+    - ## the name of a MetadataApplicator resource
+      ##
+      name: ""

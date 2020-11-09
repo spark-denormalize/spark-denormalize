@@ -1,0 +1,92 @@
+## a data source which stores incremental data, capable of time-traveling to specific snapshots
+##
+kind: IncrementalDataSource
+
+## the metadata of this resource
+##
+metadata:
+
+  ## the name of this data source
+  ##
+  name: ""
+
+## the spec of this resource
+##
+spec:
+
+  ## the data sources used in the views
+  ##
+  ## WARNING:
+  ##  - only the LATEST snapshot form each of these sources will be used,
+  ##    (the snapshots exposed to OutputDataset are created from your queries in IncrementalDataSource)
+  ##
+  dataSources:
+
+    - ## the kind of data source
+      ##
+      kind: ""
+
+      ## the name of the data source
+      ##
+      name: ""
+
+      ## the alias to give this data source in `dataView`
+      ##
+      alias: ""
+
+  ## an SparkSQL query which returns a specific snapshot
+  ##
+  ## WARNING:
+  ##  - the query needs to contain a SNAPSHOT substitution value
+  ##
+  ##
+  ## FORMAT:
+  ##  - Substitution Values:
+  ##     - `{{ SNAPSHOT | <UNIX_SECONDS> OR <UNIX_MILLISECONDS> }}`
+  ##  - this is a SparkSQL query, see docs:
+  ##     - https://spark.apache.org/docs/3.0.1/sql-ref-syntax-qry-select.html
+  ##     - https://spark.apache.org/docs/3.0.1/api/sql/index.html
+
+  ## EXAMPLE:
+  ##    sqlQuery: |
+  ##      SELECT
+  ##        col_1,
+  ##        col_2
+  ##      FROM
+  ##        xxxxx
+  ##      WHERE
+  ##        snapshot_epoch == {{ SNAPSHOT | UNIX_SECONDS }}
+  ##
+  dataQuery: ""
+
+  ## an SparkSQL query which returns intervals of snapshot-times which are available
+  ##
+  ## NOTE:
+  ##  - the output of this query must have two columns:
+  ##     - `interval_start` (LongType: UNIX_MILLISECONDS)
+  ##     - `interval_end`   (LongType: UNIX_MILLISECONDS)
+  ##  - each row represents a single INCLUSIVE interval (intervals CAN overlap)
+  ##  - this is a SparkSQL query, see docs:
+  ##     - https://spark.apache.org/docs/3.0.1/sql-ref-syntax-qry-select.html
+  ##     - https://spark.apache.org/docs/3.0.1/api/sql/index.html
+  ##
+  ## EXAMPLE:
+  ##    sqlQuery: |
+  ##      SELECT
+  ##        MIN(snapshot_epoch) AS interval_start,
+  ##        MAX(snapshot_epoch) AS interval_end,
+  ##      FROM
+  ##        xxxxx
+  ##
+  snapshotQuery: ""
+
+  ## a list of metadata applicators to apply
+  ##
+  ## NOTE:
+  ##  - metadata applicators are applied IN ORDER
+  ##
+  metadataApplicators:
+
+    - ## the name of a MetadataApplicator resource
+      ##
+      name: ""

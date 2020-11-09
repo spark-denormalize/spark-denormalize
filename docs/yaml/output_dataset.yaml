@@ -1,0 +1,346 @@
+## an output dataset which combines data sources
+##
+kind: OutputDataset
+
+## the metadata of this resource
+##
+metadata:
+
+  ## the name of this output dataset
+  ##
+  name: ""
+
+## the spec of this resource
+##
+spec:
+
+  ## configs related to the data model
+  ##
+  dataModel:
+
+    ## configs related to the root data source
+    ##
+    rootDataSource:
+
+      ## the kind of data source
+      ##
+      kind: ""
+
+      ## the name of the data source
+      ##
+      name: ""
+
+      ## the fields from this source will collected into a STRUCT column with this name
+      ##
+      ## WARNING:
+      ##  - must not overlap with any `otherDataSources[].fieldName`
+      ##
+      fieldName: ""
+
+      ## filter configs for which snapshots to include
+      ##
+      snapshotFilters:
+
+        ## a filter which includes a single snapshot from each interval window
+        ##
+        interval:
+
+          ## which snapshot to prefer when multiple are valid
+          ##
+          ## FORMAT:
+          ##  - `NEWEST`: prefer the newest valid snapshot
+          ##  - `OLDEST`: prefer the oldest valid snapshot
+          ##
+          prefrence: "NEWEST"
+
+          ## the start of the first interval
+          ##
+          ## WARNING:
+          ##  - snapshots before this time will NOT be included
+          ##
+          start:
+            millisecond: 0
+            second: 0
+            minute: 0
+            hour: 0
+            day: 1
+            month: 1
+            year: 2020
+            timezone: "UTC"
+
+          ## the length of the interval
+          ##
+          length:
+            milliseconds: 0
+            seconds: 0
+            minutes: 0
+            hours: 0
+            days: 0
+            weeks: 0
+            months: 0
+            years: 0
+
+    ## the list of data sources to include in the relationship graph
+    ##
+    otherDataSources:
+
+      - ## the kind of data source
+        ##
+        kind: ""
+
+        ## the name of the data source
+        ##
+        name: ""
+
+        ## the fields from this source will collected into a STRUCT column with this name
+        ##
+        ## WARNING:
+        ##  - must not overlap with `rootDataSource[].fieldName`
+        ##  - must not overlap with any `otherDataSources[].fieldName`
+        ##
+        fieldName: ""
+
+        ## the behaviour if this DataSource has no path to the root
+        ##
+        ## FORMAT:
+        ##  - `ERROR`:  fail the job
+        ##  - `IGNORE`: ignore silently, continue without this DataSource
+        ##  - `WARN`:   emit warning, continue without this DataSource
+        ##
+        pathMissingMode: "ERROR"
+
+        ## a list of fields to GROUP BY
+        ##
+        ## WARNING:
+        ##  - the job will fail if this value changes between runs (otherwise schema would not be mergeable)
+        ##
+        ## NOTE:
+        ##  - if specified, the fields from this source will be collected into a `ARRAY<STRUCT>` column
+        ##
+        groupByFields: []
+
+        ## configs for snapshots
+        ##
+        snapshot:
+
+          ## the behaviour if there are no valid snapshot
+          ##
+          ## FORMAT:
+          ##  - `ERROR`:         fail the job
+          ##  - `IGNORE`:        ignore silently, continue and mark this (and graph dependants) as missing/null
+          ##  - `WARN`:          emit warning, continue and mark this (and graph dependants) as missing/null
+          ##  - `SKIP_SNAPSHOT`: emit warning, skip this output-snapshot
+          ##
+          missingMode: "WARN"
+
+          ## the snapshot to prefer if multiple are valid
+          ##
+          ## FORMAT:
+          ##  - `NEWEST`: prefer the newest valid snapshot
+          ##  - `OLDEST`: prefer the oldest valid snapshot
+          ##
+          prefrence: "NEWEST"
+
+          ## the maximum time BEFORE the root snapshot
+          ##
+          timeBefore:
+            milliseconds: 0
+            seconds: 0
+            minutes: 0
+            hours: 0
+            days: 0
+            weeks: 0
+            months: 0
+            years: 0
+
+          ## the maximum time AFTER the root snapshot
+          ##
+          timeAfter:
+            milliseconds: 0
+            seconds: 0
+            minutes: 0
+            hours: 0
+            days: 0
+            weeks: 0
+            months: 0
+            years: 0
+
+    ## the list of data relationships which will be used
+    ##
+    dataRelationships:
+
+      - ## the name of the data relationship
+        ##
+        name: ""
+
+        ## the behaviour if this relationship is not used
+        ##
+        ## FORMAT:
+        ##  - `ERROR`:  fail the job
+        ##  - `IGNORE`: ignore silently
+        ##  - `WARN`:   emit warning
+        ##
+        unusedMode: "WARN"
+
+        ## used to break ties if there are multiple minimum-spanning-tree of the relationship graph
+        ##
+        ## NOTE:
+        ##  - the path/hop length is always considered first, and ties are broken with `antiPriority`
+        ##  - when resolving a  comparing two join-paths (of equal length),
+        ##    we sum together the `antiPriority` of all relationships included in each path,
+        ##    and use the path with the lower value
+        ##
+        antiPriority: 0
+
+        ## groups of DataSources to exclude from this relationship
+        ##
+        excludeDataSourceSets:
+
+          - ## a set of data sources
+            ##
+            ## NOTE:
+            ##  - all edges between pairs of data sources in the set will be cut
+            ##
+            dataSourceSet:
+
+              - ## the kind of data source
+                ##
+                kind: ""
+
+                ## the name of the data source
+                ##
+                name: ""
+
+    ## the maximum number of nested STRUCT types before the job will fail
+    ##
+    ## NOTE:
+    ##  - this can be used as a sanity check, and so that we dont produce data which systems like BigQuery can't read
+    ##
+    maxDepth: 15
+
+  ## configs related to the output data/metadata
+  ##
+  output:
+
+    ## the format of the output data
+    ##
+    ## FORMAT:
+    ##  - `Parquet`
+    ##  - `Avro`
+    ##  - `JSONL`
+    ##
+    format: ""
+
+    ## the compression of the output data
+    ##
+    ## FORMAT:
+    ##  - `Snappy`
+    ##  - `None`
+    ##
+    compression: ""
+
+    ## the output data folder
+    ##
+    ## WARNING:
+    ##  - this folder must be empty on first run, else error
+    ##
+    ## EXAMPLE:
+    ##    dataUri: "gs://my_bucket/xxxxx.parquet/"
+    ##
+    dataUri: ""
+
+    ## the output metadata folder
+    ##
+    ## WARNING:
+    ##  - this can NOT be a subfolder of `dataUri` (to ensure `dataUri` is a valid Hive-Partitioned dataset)
+    ##  - this folder must be empty on first run, else error
+    ##
+    metadataUri: "${dataUri}.META/"
+
+    ## configs related the snapshots of the output data
+    ##
+    snapshot:
+
+      ## the order work through a snapshot backlog
+      ##
+      ## FORMAT:
+      ##  - `OLDEST_FIRST`
+      ##  - `NEWEST_FIRST`
+      ##
+      catchupOrder: "OLDEST_FIRST"
+
+      ## configs for using Hive-like partitioning to store snapshots
+      ##
+      hivePartition:
+
+        ## the name of the field
+        ##
+        fieldName: ""
+
+        ## the format to store the snapshot is
+        ##
+        ## FORMAT:
+        ##  - `UNIX_SECONDS`:       a integer with unix epoch in seconds
+        ##  - `UNIX_MILLISECONDS`:  a long with unix epoch in milliseconds
+        ##  - `ISO8601_DATE_TIME`: a string with ISO8601 date-time format (ex: '2020-01-01T00:00:00Z')
+        ##
+        format: ""
+
+        ## the default timezone
+        ##
+        ## NOTE:
+        ##  - currently only applicable to `ISO8601_DATE_TIME`, if timezone is omitted
+        ##
+        defaultTimezone: "UTC"
+
+      ## configs for automatically deleting old snapshots
+      ##
+      ## NOTE:
+      ##  - after each new snapshot is appended, the app will delete the oldest snapshot until
+      ##    this condition is met
+      ##
+      autoDelete:
+
+        ## the maximum file-age of snapshots
+        ##
+        ## NOTE:
+        ##  - the latest snapshot will NEVER be deleted by this check
+        ##  - this can be used to give a 'grace period' for jobs to finish reading tables
+        ##    (for tables where only the latest snapshot matters, like transaction-events)
+        ##
+        maxFileAge:
+          milliseconds: 0
+          seconds: 0
+          minutes: 0
+          hours: 0
+          days: 0
+          weeks: 0
+          months: 0
+          years: 0
+
+        ## the maximum age of snapshots
+        ##
+        ## NOTE:
+        ##  - the latest snapshot will NEVER be deleted by this check
+        ##
+        maxAge:
+          milliseconds: 0
+          seconds: 0
+          minutes: 0
+          hours: 0
+          days: 0
+          weeks: 0
+          months: 0
+          years: 0
+
+        ## the maximum number of old snapshots
+        ##
+        ## NOTE:
+        ##  - the latest snapshot will NEVER be deleted by this check
+        ##
+        ## FORMAT:
+        ##  - `-1`: keep all
+        ##  - `0`:  keep latest only
+        ##  - `+N:` keep latest + N
+        ##
+        maxNumber: -1

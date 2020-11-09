@@ -1,0 +1,214 @@
+## a data source which is HDFS-like (e.g. HDFS/S3/GCS)
+##
+kind: HDFSLikeDataSource
+
+## the metadata of this resource
+##
+metadata:
+
+  ## the name of this data source
+  ##
+  name: ""
+
+## the spec of this resource
+##
+spec:
+
+  ## the format of the input data
+  ##
+  ## FORMAT:
+  ##  - `Parquet`
+  ##  - `Avro`
+  ##  - `CSV`
+  ##  - `JSONL`
+  ##
+  format: ""
+
+  ## reader options
+  ##
+  ## NOTE:
+  ##  - values are specific to the selected `format`
+  ##  - we specify default values for all `formatOptions` which may not be the same as spark
+  ##
+  ## FORMAT:
+  ##  - similar to what is provided in spark:
+  ##    https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/DataFrameReader.html
+  ##
+  formatOptions: {}
+
+  ## a list of source URI globs which match the input files
+  ##
+  ## NOTE:
+  ##  - non-file matches will be excluded (to prevent spark recursing into them)
+  ##
+  ## FORMAT:
+  ##  - HDFS Glob:
+  ##    https://hadoop.apache.org/docs/r2.8.2/api/org/apache/hadoop/fs/FileSystem.html#globStatus(org.apache.hadoop.fs.Path)
+  ##
+  ## EXAMPLE -- hive partition:
+  ##    sourceUris: ["gs://my_bucket/xxxxx.parquet/snapshot_epoch=*/*.parquet"]
+  ##
+  ## EXAMPLE -- file name:
+  ##    sourceUris: ["gs://my_bucket/table_snapshot__*.csv"]
+  ##
+  sourceUris: []
+
+  ## a URI prefix shared by all matches of `sourceUris` (used to extract field values encoded into the URI)
+  ##
+  ## WARNING:
+  ##  - if specified, MUST match all `sourceUris` as a PREFIX, else error
+  ##
+  ## FORMAT:
+  ##  - capture-groups are formatted {<FIELD_NAME>:<DATA_TYPE>}
+  ##     - <FIELD_NAME> can be any valid field name (not already present in the source data)
+  ##     - <DATA_TYPE> can be one of `STRING`, `INTEGER`, `LONG`, `ISO8601_DATE_TIME`
+  ##  - the `{` and `}` characters are escaped with `{{` and `}}` respectively
+  ##  - must end with a non capture-group character (e.g. `/`), else error
+  ##    (prevents the final capture group consuming the entire remaining URI)
+  ##
+  ## EXAMPLE -- hive partition:
+  ##    sourceUriPrefix: "gs://my_bucket/xxxxx.parquet/snapshot_epoch={snapshot_epoch:INTEGER}/"
+  ##
+  sourceUriPrefix: ""
+
+  ## configs describing how snapshots are stored
+  ##
+  snapshotConfig:
+
+    ## the fields containing the snapshot time
+    ##
+    ## NOTE:
+    ##  - if {} is provided, we assume the data corresponds to the read-time
+    ##    (which is the case if this data-source is the production system)
+    ##
+    existingField:
+
+      ## the name of a field
+      ##
+      ## NOTE:
+      ##  - if this field is created by `sourceUriPrefix` extraction, we extract snapshot values based
+      ##    off the URI-path directly, (reducing the number of HDFS/S3/GCS API calls)
+      ##
+      name: ""
+
+      ## the format the snapshot is stored in
+      ##
+      ## FORMAT:
+      ##  - `TIMESTAMP`:          a timestamp type
+      ##  - `UNIX_SECONDS`:       a integer with unix epoch in seconds
+      ##  - `UNIX_MILLISECONDS`:  a long with unix epoch in milliseconds
+      ##  - *`ISO8601_DATE_TIME`: a string with ISO8601 date-time format (ex: '2020-01-01T00:00:00Z')
+      ##  - **`ISO8601_DATE`:     a string with ISO8601 date format (ex: '2020-01-01')
+      ##
+      ## *  = `defaultTimezone` is used (if missing from string)
+      ## ** = read as midnight in the `defaultTimezone`
+      ##
+      format: ""
+
+      ## the default timezone
+      ##
+      ## NOTE:
+      ##  - currently only applicable to: `ISO8601_DATE_TIME`, `ISO8601_DATE`
+      ##
+      defaultTimezone: "UTC"
+
+  ## manual schema specification
+  ##
+  ## WARNING:
+  ##  - if the schema is incompatible with the data, the data reading will fail
+  ##
+  ## NOTE:
+  ##  - this is OPTIONAL (but could be specified for validation or adding metadata)
+  ##
+  ## FORMAT:
+  ##  - similar to the spark format (but in YAML syntax)
+  ##    https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/types/DataType$.html
+  ##
+  schemaFields:
+
+    - ## metadata tags to apply to this field
+      ##
+      metadata: {}
+
+      ## the name of the field
+      ##
+      name: ""
+
+      ## if this field can contain nulls
+      ##
+      ## WARNING:
+      ##  - setting `false` will cause the job to fail if null is encountered
+      ##
+      nullable: true
+
+      ## the type of the field
+      ##
+      ## FORMAT:
+      ##  - `array`
+      ##  - `binary`
+      ##  - `boolean`
+      ##  - `byte`
+      ##  - `date`
+      ##  - `decimal(<precision>,<scale>)`
+      ##  - `double`
+      ##  - `float`
+      ##  - `integer`
+      ##  - `long`
+      ##  - `map`
+      ##  - `null`
+      ##  - `short`
+      ##  - `string`
+      ##  - `struct`
+      ##  - `timestamp`
+      ##
+      type: ""
+
+      ## for `type=struct` || the fields inside the struct
+      ##
+      ## NOTE:
+      ##  - the elements of this list are formatted the same as `schemaFields`
+      ##
+      fields: []
+
+      ## for `type=array` || the type contained inside the array
+      ##
+      ## NOTE:
+      ##  - if "": must be the name of a basic data type
+      ##  - if {}: must must be formatted like `schemaFields`
+      ##
+      elementType: "" or {}
+
+      ## for `type=array` ||  if the array can contain NULL values
+      ##
+      containsNull: false
+
+      ## for `type=map` || the type of the mapping key
+      ##
+      ## NOTE:
+      ##  - if "": must be the name of a basic data type
+      ##  - if {}: must must be formatted like `schemaFields`
+      ##
+      keyType: "" or {}
+
+      ## for `type=map` || the type of the mapping value
+      ##
+      ## NOTE:
+      ##  - if "": must be the name of a basic data type
+      ##  - if {}: must must be formatted like `schemaFields`
+      ##
+      valueType: "" or {}
+
+      ## for `type=map` ||  if the mapping value can contain NULL values
+      ##
+      valueContainsNull: false
+
+  ## a list of metadata applicators to apply
+  ##
+  ## NOTE:
+  ##  - metadata applicators are applied IN ORDER
+  ##
+  metadataApplicators:
+
+    - ## the name of a MetadataApplicator resource
+      ##
+      name: ""
