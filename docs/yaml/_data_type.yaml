@@ -1,0 +1,86 @@
+## a specification for a org.apache.spark.sql.types.DataType
+##
+## WARNING:
+##  - only one of these keys may be specified, the rest must be excluded
+##
+dataType:
+
+  ## org.apache.spark.sql.types.ArrayType
+  ##
+  array:
+    elementType: <DATA_TYPE>
+    containsNull: true
+
+  ## org.apache.spark.sql.types.BinaryType
+  ##
+  binary: {}
+
+  ## org.apache.spark.sql.types.BooleanType
+  ##
+  boolean: {}
+
+  ## org.apache.spark.sql.types.ByteType
+  ##
+  byte: {}
+
+  ## org.apache.spark.sql.types.CalendarIntervalType
+  ##
+  calendarInterval: {}
+
+  ## org.apache.spark.sql.types.DateType
+  ##
+  date: {}
+
+  ## org.apache.spark.sql.types.DecimalType
+  ##
+  decimal:
+    precision: <INT>
+    scale: <INT>
+
+  ## org.apache.spark.sql.types.DoubleType
+  ##
+  double: {}
+
+  ## org.apache.spark.sql.types.FloatType
+  ##
+  float: {}
+
+  ## org.apache.spark.sql.types.IntegerType
+  ##
+  integer: {}
+
+  ## org.apache.spark.sql.types.LongType
+  ##
+  long: {}
+
+  ## org.apache.spark.sql.types.MapType
+  ##
+  map:
+    keyType: <DATA_TYPE>
+    valueType: <DATA_TYPE>
+    valueContainsNull: true
+
+  ## org.apache.spark.sql.types.NullType
+  ##
+  null: {}
+
+  ## org.apache.spark.sql.types.ShortType
+  ##
+  short: {}
+
+  ## org.apache.spark.sql.types.StringType
+  ##
+  string: {}
+
+  ## org.apache.spark.sql.types.StringType
+  ##
+  struct:
+    fields:
+      - name: ""
+        dataType: <DATA_TYPE>
+        nullable: true
+        metadata: {}
+
+  ## org.apache.spark.sql.types.TimestampType
+  ##
+  timestamp: {}

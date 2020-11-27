@@ -1,6 +1,10 @@
-## a data source which stores incremental data, capable of time-traveling to specific snapshots
+## the resource api version
 ##
-kind: IncrementalDataSource
+apiVersion: v1
+
+## a DataSource which is a 'view' of multiple other DataSources
+##
+kind: ComplexVirtualDataSource
 
 ## the metadata of this resource
 ##
@@ -8,7 +12,7 @@ metadata:
 
   ## the name of this data source
   ##
-  name: ""
+  name: "test" ## TODO: remove after test
 
 ## the spec of this resource
 ##
@@ -24,21 +28,23 @@ spec:
 
     - ## the kind of data source
       ##
-      kind: ""
+      kind: "HDFSLikeDataSource" ## TODO: remove after test
 
       ## the name of the data source
       ##
-      name: ""
+      name: "test" ## TODO: remove after test
 
       ## the alias to give this data source in `dataView`
       ##
-      alias: ""
+      ## WARNING:
+      ##  - this must be unique within this data source
+      ##
+      alias: "test" ## TODO: remove after test
 
   ## an SparkSQL query which returns a specific snapshot
   ##
   ## WARNING:
   ##  - the query needs to contain a SNAPSHOT substitution value
-  ##
   ##
   ## FORMAT:
   ##  - Substitution Values:
@@ -46,7 +52,7 @@ spec:
   ##  - this is a SparkSQL query, see docs:
   ##     - https://spark.apache.org/docs/3.0.1/sql-ref-syntax-qry-select.html
   ##     - https://spark.apache.org/docs/3.0.1/api/sql/index.html
-
+  ##
   ## EXAMPLE:
   ##    sqlQuery: |
   ##      SELECT
@@ -57,7 +63,8 @@ spec:
   ##      WHERE
   ##        snapshot_epoch == {{ SNAPSHOT | UNIX_SECONDS }}
   ##
-  dataQuery: ""
+  ## TODO: remove value after test
+  dataQuery: "SELECT * FROM test WHERE snapshot_epoch == {{ SNAPSHOT | UNIX_SECONDS }}"
 
   ## an SparkSQL query which returns intervals of snapshot-times which are available
   ##
@@ -78,7 +85,8 @@ spec:
   ##      FROM
   ##        xxxxx
   ##
-  snapshotQuery: ""
+  ## TODO: remove value after test
+  snapshotQuery: "SELECT MIN(snapshot_epoch) AS interval_start, MAX(snapshot_epoch) AS interval_end FROM test"
 
   ## a list of metadata applicators to apply
   ##
@@ -89,4 +97,4 @@ spec:
 
     - ## the name of a MetadataApplicator resource
       ##
-      name: ""
+      name: "test" ## TODO: remove after test

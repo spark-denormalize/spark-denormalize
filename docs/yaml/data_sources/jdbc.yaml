@@ -1,3 +1,7 @@
+## the resource api version
+##
+apiVersion: v1
+
 ## a data source which is accessed through JDBC
 ##
 kind: JDBCDataSource
@@ -8,7 +12,7 @@ metadata:
 
   ## the name of this data source
   ##
-  name: ""
+  name: "test" ## TODO: remove after test
 
 ## the spec of this resource
 ##
@@ -19,27 +23,67 @@ spec:
   ## EXAMPLE:
   ##    connection: "jdbc:informix-sqli://..."
   ##
-  connection: ""
+  connection: "test" ## TODO: remove after test
 
   ## the JDBC driver class to use
   ##
   ## NOTE:
-  ##  - must be provided in `Config().spec.spark.packages` or `Config().spec.spark.jars`
+  ##  - JDBC dependencies must be provided with spark-submit configs, like `--jars` or `--packages`
   ##
   ## EXAMPLE:
   ##    driverClass: "com.informix.jdbc.IfxDriver"
   ##
-  driverClass: ""
+  driverClass: "test" ## TODO: remove after test
+
+  ## configs describing how database credentials are stored
+  ##
+  ## WARNING:
+  ##  - only one option may be specified, the rest must be excluded
+  ##
+  credentials:
+
+    ## where the credentials are stored in plaintext
+    ##
+    fromPlaintext:
+
+      ## the plaintext user
+      ##
+      user: ""
+
+      ## the plaintext password
+      ##
+      password: ""
+
+    ## where the credentials are stored in an environment variable on the spark master
+    ##
+    ## NOTE:
+    ##  - in spark `--deploy-mode=client`, this is the server running `spark-submit`
+    ##
+    #fromEnvironment: ## TODO: uncomment after test
+    #
+    #  ## the environment variable with the plaintext user
+    #  ##
+    #  ## EXAMPLE:
+    #  ##    user: "MY_DB_USER"
+    #  ##
+    #  userVariable: ""
+    #
+    #  ## the environment variable with the plaintext password
+    #  ##
+    #  ## EXAMPLE:
+    #  ##    user: "MY_DB_PASSWORD"
+    #  ##
+    #  passwordVariable: ""
 
   ## a reference to a table
   ##
   ## NOTE:
-  ##  - this is database-flavor specific
+  ##  - what "." is interpreted as is dependant on your JDBC driver
   ##
   ## EXAMPLE:
-  ##    tableReference: "my_db.my_table"
+  ##    tableReference: "my_database.my_table"
   ##
-  tableReference: ""
+  tableReference: "test" ## TODO: remove after test
 
   ## a list of table predicates (used for read parallelism)
   ##
@@ -58,134 +102,88 @@ spec:
 
   ## configs describing how snapshots are stored
   ##
-  snapshotConfig:
+  ## WARNING:
+  ##  - only one option may be specified, the rest must be excluded
+  ##
+  snapshot:
 
-    ## the fields containing the snapshot time
+    ## where the snapshot time is stored inside a data field
     ##
-    ## NOTE:
-    ##  - if {} is provided, we assume the data corresponds to the read-time
-    ##    (which is the case if this data-source is the production system)
-    ##
-    existingField:
+    fromFieldValue:
 
-      ## the name of a field
+      ## the name of the field
       ##
-      ## NOTE:
-      ##  - if this field is created by `sourceUriPrefix` extraction, we extract snapshot values based
-      ##    off the URI-path directly, (reducing the number of HDFS/S3/GCS API calls)
-      ##
-      name: ""
+      fieldName: "test" ## TODO: remove after test
 
-      ## the format the snapshot is stored in
+      ## the format the snapshot time is stored in
       ##
       ## FORMAT:
-      ##  - `TIMESTAMP`:          a timestamp type
-      ##  - `UNIX_SECONDS`:       a integer with unix epoch in seconds
-      ##  - `UNIX_MILLISECONDS`:  a long with unix epoch in milliseconds
-      ##  - *`ISO8601_DATE_TIME`: a string with ISO8601 date-time format (ex: '2020-01-01T00:00:00Z')
-      ##  - **`ISO8601_DATE`:     a string with ISO8601 date format (ex: '2020-01-01')
+      ##  - `ISO8601_DATE`:*       a string with ISO8601 date format (ex: '2020-01-01')
+      ##  - `ISO8601_DATE_TIME`:** a string with ISO8601 date-time format (ex: '2020-01-01T00:00:00Z')
+      ##  - `TIMESTAMP`:           a timestamp type
+      ##  - `UNIX_MILLISECONDS`:   a long with unix epoch in milliseconds
+      ##  - `UNIX_SECONDS`:        a long/int with unix epoch in seconds
       ##
-      ## *  = `defaultTimezone` is used (if missing from string)
-      ## ** = read as midnight in the `defaultTimezone`
+      ## *  = read as midnight in the `defaultTimezone`
+      ## ** = `defaultTimezone` is used (if missing from string)
       ##
-      format: ""
+      timeFormat: "UNIX_MILLISECONDS" ## TODO: remove after test
 
-      ## the default timezone
+      ## the default timezone ("tz database" format)
+      ##
+      ## EXAMPLE:
+      ##    timezone: "America/New_York"
       ##
       ## NOTE:
       ##  - currently only applicable to: `ISO8601_DATE_TIME`, `ISO8601_DATE`
       ##
       defaultTimezone: "UTC"
 
+      ## if the field is dropped after we extract the snapshot times
+      ##
+      ## NOTE:
+      ##  - any OutputDatasets which use this data source will still have the snapshot of the root data source
+      ##
+      dropField: true
+
+    ## where the snapshot time is the instant we read the data (system time)
+    ##
+    ## NOTE:
+    ##  - this option makes sense if this data source is the source-of-truth
+    ##    (e.g. it is the production system which generates the data)
+    ##
+    #fromReadTime: {} ## TODO: uncomment after test
+
   ## manual schema specification
   ##
   ## WARNING:
-  ##  - if the schema is incompatible with the data, the data reading will fail
+  ##  - if the schema is incompatible with the data, the data reading may fail
   ##
   ## NOTE:
-  ##  - this is OPTIONAL (but could be specified for validation or adding metadata)
-  ##
-  ## FORMAT:
-  ##  - similar to the spark format (but in YAML syntax)
-  ##    https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/types/DataType$.html
+  ##  - this is OPTIONAL
   ##
   schemaFields:
 
-    - ## metadata tags to apply to this field
-      ##
-      metadata: {}
-
-      ## the name of the field
+    - ## the name of the field
       ##
       name: ""
-
-      ## if this field can contain nulls
-      ##
-      ## WARNING:
-      ##  - setting `false` will cause the job to fail if null is encountered
-      ##
-      nullable: true
 
       ## the type of the field
       ##
       ## FORMAT:
-      ##  - `array`
-      ##  - `binary`
-      ##  - `boolean`
-      ##  - `byte`
-      ##  - `date`
-      ##  - `decimal(<precision>,<scale>)`
-      ##  - `double`
-      ##  - `float`
-      ##  - `integer`
-      ##  - `long`
-      ##  - `map`
-      ##  - `null`
-      ##  - `short`
-      ##  - `string`
-      ##  - `struct`
-      ##  - `timestamp`
+      ##  - see `_data_type.yaml`
       ##
-      type: ""
+      dataType:
 
-      ## for `type=struct` || the fields inside the struct
-      ##
-      ## NOTE:
-      ##  - the elements of this list are formatted the same as `schemaFields`
-      ##
-      fields: []
+        string: {} ## TODO: remove after test
 
-      ## for `type=array` || the type contained inside the array
+      ## if this field can contain nulls
       ##
-      ## NOTE:
-      ##  - if "": must be the name of a basic data type
-      ##  - if {}: must must be formatted like `schemaFields`
-      ##
-      elementType: "" or {}
+      nullable: true
 
-      ## for `type=array` ||  if the array can contain NULL values
+      ## metadata tags to apply to this field
       ##
-      containsNull: false
-
-      ## for `type=map` || the type of the mapping key
-      ##
-      ## NOTE:
-      ##  - if "": must be the name of a basic data type
-      ##  - if {}: must must be formatted like `schemaFields`
-      ##
-      keyType: "" or {}
-
-      ## for `type=map` || the type of the mapping value
-      ##
-      ## NOTE:
-      ##  - if "": must be the name of a basic data type
-      ##  - if {}: must must be formatted like `schemaFields`
-      ##
-      valueType: "" or {}
-
-      ## for `type=map` ||  if the mapping value can contain NULL values
-      ##
-      valueContainsNull: false
+      metadata: {}
 
   ## a list of metadata applicators to apply
   ##
@@ -196,4 +194,4 @@ spec:
 
     - ## the name of a MetadataApplicator resource
       ##
-      name: ""
+      name: "test" ## TODO: remove after test

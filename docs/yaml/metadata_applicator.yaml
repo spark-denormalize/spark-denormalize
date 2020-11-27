@@ -1,3 +1,7 @@
+## the resource api version
+##
+apiVersion: v1
+
 ## a definition of how to apply metadata to a DataSource
 ##
 kind: MetadataApplicator
@@ -8,7 +12,7 @@ metadata:
 
   ## the name of this metadata applicator
   ##
-  name: ""
+  name: "test" ## TODO: remove after test
 
 ## the spec of this resource
 ##
@@ -17,41 +21,41 @@ spec:
   ## the behavior if metadata ALREADY EXISTS on a matched field
   ##
   ## FORMAT:
-  ##  - `Replace`: replace ALL existing metadata keys/values
-  ##  - `Merge`:   merge metadata keys/values (keeping the new values)
-  ##  - `Ignore`:  dont change existing metadata keys/values
+  ##  - `IGNORE`:  dont change existing metadata keys/values
+  ##  - `MERGE`:   merge metadata keys/values (keeping the new values)
+  ##  - `REPLACE`: replace ALL existing metadata keys/values
   ##
-  behaviour: ""
+  behaviour: "MERGE"
 
   ## a list of field selectors
   ##
   ## NOTE:
   ##  - we UNION together the list of fields matched by each selector
   ##
-  selectors:
+  fieldSelectors:
 
     - ## a regex selector for fields to INCLUDE
       ##
       ## NOTE:
       ##  - the regex finds matches of 'coordinates' over each field in the data schema
-      ##  - 'coordinates' are field references concatenated with `:`
-      ##     - ROOT:      `field_name`
-      ##     - STRUCT:    `struct_name:inner_field`
-      ##     - ARRAY:     `array_name:inner_field`
-      ##     - MAP-KEY:   `map_name:key:inner_field`
-      ##     - MAP-VALUE: `map_name:value:inner_field`
+      ##    ('coordinates' are field references concatenated with `:`)
+      ##     - StructField (root):        `field_name`
+      ##     - StructField (inner field): `struct_name:inner_field`
+      ##     - Array (inner field):       `array_name:inner_field`
+      ##     - Map (key field):           `map_name:key:inner_field`
+      ##     - Map (value field):         `map_name:value:inner_field`
       ##
       ## EXAMPLE:
-      ##    coordinateInclude: ".*cust.*name.*"
+      ##    coordinateIncludeRegex: ".*cust.*name.*"
       ##
-      coordinateInclude: ""
+      coordinateIncludeRegex: ".*" ## TODO: remove after test
 
       ## a regex selector for fields to EXCLUDE
       ##
       ## NOTE:
-      ##  - `coordinateExclude` takes precedence over `coordinateInclude`
+      ##  - `coordinateExcludeRegex` takes precedence over `coordinateIncludeRegex`
       ##
-      coordinateExclude: ""
+      coordinateExcludeRegex: ".*" ## TODO: remove after test
 
   ## a metadata map to apply to the matched fields
   ##
@@ -60,4 +64,4 @@ spec:
   ##      pii_class: "sensitive"
   ##      other_key: "some_value"
   ##
-  metadata: { }
+  metadata: {}

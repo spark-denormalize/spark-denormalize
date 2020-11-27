@@ -1,6 +1,10 @@
-## a data source which is a 'view' of another data source
+## the resource api version
 ##
-kind: VirtualDataSource
+apiVersion: v1
+
+## a DataSource which is a 'view' of a single other DataSource
+##
+kind: SimpleVirtualDataSource
 
 ## the metadata of this resource
 ##
@@ -8,7 +12,7 @@ metadata:
 
   ## the name of this data source
   ##
-  name: ""
+  name: "test" ## TODO: remove after test
 
 ## the spec of this resource
 ##
@@ -26,15 +30,15 @@ spec:
 
     ## the kind of data source
     ##
-    kind: ""
+    kind: "HDFSLikeDataSource" ## TODO: remove after test
 
     ## the name of the data source
     ##
-    name: ""
+    name: "test" ## TODO: remove after test
 
     ## the alias to give this data source in `dataView`
     ##
-    alias: ""
+    alias: "test" ## TODO: remove after test
 
   ## an SQL query which returns the data
   ##
@@ -57,7 +61,7 @@ spec:
   ##      WHERE
   ##        col_1 IS NOT NULL
   ##
-  dataQuery: ""
+  dataQuery: "test" ## TODO: remove after test
 
   ## a list of metadata applicators to apply
   ##
@@ -68,4 +72,4 @@ spec:
 
     - ## the name of a MetadataApplicator resource
       ##
-      name: ""
+      name: "test" ## TODO: remove after test
