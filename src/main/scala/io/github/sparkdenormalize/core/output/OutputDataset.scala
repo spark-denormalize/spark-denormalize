@@ -17,6 +17,7 @@ import io.github.sparkdenormalize.core.output.OutputFolder.{
   SnapshotConfig
 }
 import io.github.sparkdenormalize.core.relationship.DataRelationship
+import io.github.sparkdenormalize.spark.{LeftJoinListener, MetricListener}
 import org.apache.spark.sql.SparkSession
 
 class OutputDataset private (val name: String, dataModel: DataModelGraph, folder: OutputFolder)

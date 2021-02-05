@@ -5,7 +5,8 @@ import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types.DataType
 
-object SparkColumnMethods {
+/** Utility methods related to [[org.apache.spark.sql.Column]] */
+object SparkColumnUtils {
 
   /** Resolve attributes of a spark Column against a DataFrame
     *

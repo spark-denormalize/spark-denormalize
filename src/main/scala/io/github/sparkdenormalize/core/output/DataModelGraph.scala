@@ -5,10 +5,11 @@ import scala.collection.mutable
 
 import io.github.sparkdenormalize.common.DirectedGraphBase
 import io.github.sparkdenormalize.common.DirectedGraphBase.LongDefaultEdge
-import io.github.sparkdenormalize.common.SparkColumnMethods.{
+import io.github.sparkdenormalize.common.SparkColumnUtils.{
   resolveAttributes,
   UnresolvableAttributeException
 }
+import io.github.sparkdenormalize.common.SparkPlanUtils.firstChildWithMetric
 import io.github.sparkdenormalize.config.resource.spec.OutputDatasetSpec.{
   GroupByFieldMissingMode,
   JoinFieldMissingMode,
@@ -29,6 +30,7 @@ import io.github.sparkdenormalize.core.output.DataModelGraph.{
 }
 import io.github.sparkdenormalize.core.relationship.DataRelationship
 import io.github.sparkdenormalize.core.relationship.DataRelationship.JoinKeyComponent
+import io.github.sparkdenormalize.spark.MetricListener
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{collect_list, expr, struct}
@@ -102,6 +104,9 @@ class DataModelGraph private (
   def readSnapshot(rootSnapshotTime: SnapshotTime): OutputSnapshot = {
     val (data: Option[DataFrame], _) =
       readDataFrame(parentId = 0, rootSnapshotTime = rootSnapshotTime)
+
+    logWarning(s"MAIN ID: ${data.get.queryExecution.sparkPlan.id}")
+
     OutputSnapshot(data = data.get, snapshotTime = rootSnapshotTime)
   }
 
@@ -427,6 +432,23 @@ class DataModelGraph private (
               joinType = "left"
             )
 
+            val ROW_COUNT_METRIC_NAME = "numOutputRows"
+            val parentFieldName = parent.config.map(_.fieldName).getOrElse("root")
+            val parentPlan =
+              firstChildWithMetric(parentData.queryExecution.sparkPlan, ROW_COUNT_METRIC_NAME)
+            val childPlan =
+              firstChildWithMetric(childData.queryExecution.sparkPlan, ROW_COUNT_METRIC_NAME)
+            val outPlan = dfTemp.queryExecution.sparkPlan
+
+            logWarning(
+              s"""JOIN METRICS:
+                 |NAMES: (${parentFieldName}, ${childFieldName})
+                 |LEFT:  #${outPlan.id} -- ${parentPlan.metrics(ROW_COUNT_METRIC_NAME)}
+                 |RIGHT: #${childPlan.id} -- ${childPlan.metrics(ROW_COUNT_METRIC_NAME)}
+                 |OUT:   #${outPlan.id} -- ${outPlan.metrics(ROW_COUNT_METRIC_NAME)}
+                 |""".stripMargin
+            )
+
             // get the list of columns which should be included in the output
             //  - note, this prevents group-by key(s) ending up in the output
             val oldColumns: Seq[Column] = df.columns.map(df.col)
@@ -463,6 +485,11 @@ object DataModelGraph extends Logging {
       dataRelationships: Seq[(DataRelationship, DataRelationshipConfig)],
       maxDepth: Long
   )(implicit ss: SparkSession): DataModelGraph = {
+
+    // TODO: temp debug
+    ss.listenerManager.register(new MetricListener())
+
+    // TODO: is SparkSession needed here?
 
     val graph = new SimpleDirectedGraph[Long, LongDefaultEdge](classOf[LongDefaultEdge])
     val vertexMap = mutable.HashMap[Long, VertexData]()
